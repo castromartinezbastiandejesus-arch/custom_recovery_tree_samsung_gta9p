@@ -1,0 +1,46 @@
+name: Makefile CI (Rápido)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar dependencias mínimas
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-core gnupg flex bison build-essential zip curl zlib1g-dev libc6-dev-i386 libncurses5 x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig make gcc g++ libncurses5-dev libssl-dev bc
+
+      - name: Descargar código fuente de TWRP
+        run: |
+          mkdir ~/workspace
+          cd ~/workspace
+          mkdir -p ~/bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod a+x ~/bin/repo
+          export PATH=~/bin:$PATH
+          
+          git config --global user.name "castromartinezbastiandejesus-arch"
+          git config --global user.email "custom_recovery_tree_samsung_gta9p"
+          
+          # Inicializar repo (Usando rama de Android 12.1 como ejemplo)
+          repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1
+          
+          # Sincronizar código fuente de los servidores (tardará unos minutos)
+          repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+          
+          # Clonar tu device tree
+          git clone https://github.com/TU_USUARIO/TU_REPOSITORIO_DEVICE_TREE.git device/samsung/gta9p
+
+      - name: Compilar recovery
+        run: |
+          cd ~/workspace
+          export PATH=~/bin:$PATH
+          source build/envsetup.sh
+          lunch twrp_gta9p-eng
+          make recoveryimage -j$(nproc)
