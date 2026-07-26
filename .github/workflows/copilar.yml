@@ -1,0 +1,12 @@
+      - name: Compilar recovery
+        run: |
+          # Entrar a la carpeta donde descargamos el código
+          cd ~/workspace
+          
+          # Asegurarse de que el comando repo siga disponible
+          export PATH=~/bin:$PATH
+          
+          # Ahora sí, los comandos de compilación
+          source build/envsetup.sh
+          lunch twrp_gta9p-eng
+          make recoveryimage -j$(nproc)
